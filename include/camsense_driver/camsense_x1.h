@@ -49,7 +49,7 @@ class CamsenseX1
 public:
 	uint16_t rpms;
 
-	CamsenseX1(const std::string& port, uint32_t baud_rate);
+	CamsenseX1(const std::string& port, uint32_t baud_rate, float offset);
 	~CamsenseX1();
 	void parse();
 	void close() { shutting_down_ = true; }
@@ -64,5 +64,6 @@ private:
 	boost::asio::io_service io_;
 	boost::asio::serial_port serial_;
 	float rotationSpeed_; 
+	float offset_;
 };
 

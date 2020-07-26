@@ -1,5 +1,16 @@
 <?xml version="1.0"?>
 <launch>
-  <node pkg="camsense_driver" type="camsense_publisher" name="camsense_publisher" output="screen"/>
+  <arg name="port" default="/dev/ttyUSB0" />
+  <arg name="offset" default="16.0" />
+
+  <!-- run camsense_driver -->
+  <node pkg="camsense_driver" type="camsense_publisher" name="camsense_publisher" output="screen">
+    <param name="port" value="$(arg port)"/>
+    <param name="offset" value="$(arg offset)"/>
+    <param name="frame_id" value="laser"/>
+  </node>
+
+  <!-- run rviz to visualize the lidar data -->
   <node pkg="rviz" type="rviz" name="rviz" args="-d $(find camsense_driver)/config/view.rviz" />
+
 </launch>

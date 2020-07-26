@@ -5,8 +5,8 @@
 #include <camsense_driver/camsense_x1.h>
 
 
-CamsenseX1::CamsenseX1(const std::string& port, uint32_t baud_rate):
-port_(port), baud_rate_(baud_rate) , serial_(io_, port_)
+CamsenseX1::CamsenseX1(const std::string& port, uint32_t baud_rate, float offset):
+port_(port), baud_rate_(baud_rate), offset_(offset), serial_(io_, port_)
 {
   shutting_down_ = false;
   serial_.set_option(boost::asio::serial_port_base::baud_rate(baud_rate_));
@@ -54,7 +54,9 @@ void CamsenseX1::parse()
       if (raw_bytes[1] == KSYNC1)
       {
         state = SYNC2;
+        break;
       }
+      state = SYNC0;
       break;
     
     case SYNC2:
@@ -62,7 +64,9 @@ void CamsenseX1::parse()
       if (raw_bytes[2] == KSYNC2)
       {
         state = SYNC3;
+        break;
       }
+      state = SYNC0;
       break;
     
     case SYNC3:
@@ -70,7 +74,9 @@ void CamsenseX1::parse()
       if (raw_bytes[3] == KSYNC3)
       {
         state = PARSE;
+        break;
       }
+      state = SYNC0;
       break;
 
     case PARSE:
@@ -104,7 +110,7 @@ void CamsenseX1::parse()
         uint8_t distanceH = raw_bytes[9+(i*3)];
         uint8_t quality = raw_bytes[10+(i*3)];
 
-        float measurementAngle = (packageStartAngle + step * i)+180.0;
+        float measurementAngle = (packageStartAngle + step * i) + (offset_ + 180);
         float fIndex = measurementAngle * IndexMultiplier;
         int index = round(fIndex);
 

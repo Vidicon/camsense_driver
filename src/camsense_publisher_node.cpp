@@ -12,19 +12,22 @@ int main(int argc, char **argv)
 
   std::string port;
   int baud_rate;
+  double offset;
   std::string frame_id;
 
   std_msgs::Float32 rpmsMsg;
 
   priv_nh.param("port", port, std::string("/dev/ttyUSB0"));
-  priv_nh.param("baud_rate", baud_rate, 115200);
   priv_nh.param("frame_id", frame_id, std::string("laser"));
+  priv_nh.param("baud_rate", baud_rate, 115200); // Not really needed as camsense only works at 115200.
+  priv_nh.param("offset", offset, 0.0);
 
   
-  CamsenseX1 camsense(port, baud_rate);
+  
   ros::Publisher scan_pub = n.advertise<sensor_msgs::LaserScan>("scan", 1000);
   ros::Publisher rpms_pub = n.advertise<std_msgs::Float32>("rpms",1000);
 
+  ROS_INFO("Starting Camsense_publisher (%s@%i) with %f offset",port.c_str(),baud_rate,offset);
 
   sensor_msgs::LaserScan scan;
   scan.header.frame_id = frame_id;
@@ -35,6 +38,8 @@ int main(int argc, char **argv)
   scan.angle_increment = (2*M_PI)/400;
   scan.ranges.resize(400);
   scan.intensities.resize(400);
+  
+  CamsenseX1 camsense(port, baud_rate, offset);
 
   while (ros::ok())
   {
@@ -50,7 +55,7 @@ int main(int argc, char **argv)
     scan.header.stamp = ros::Time::now();
     scan_pub.publish(scan);
 
-    rpmsMsg.data=camsense.getRotationSpeed();
+    rpmsMsg.data = camsense.getRotationSpeed();
     rpms_pub.publish(rpmsMsg);
   }
   camsense.close();
